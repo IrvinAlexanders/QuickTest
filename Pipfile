@@ -12,6 +12,11 @@ numpy = "*"
 pandas = "*"
 pycodestyle = "*"
 python-dateutil = "*"
+pytz = "*"
+six = "*"
+sqlparse = "*"
+toml = "*"
+typing-extensions = "*"
 
 [dev-packages]
 
