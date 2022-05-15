@@ -32,4 +32,41 @@ repositorio clonado. El siguiente paso es instalar las dependencias en el archiv
  
  ## Rutas URI:  
  
+ ~~~
+ {
+    "bills": "http://localhost:8000/api/bills/",
+    "client": "http://localhost:8000/api/client/",
+    "products": "http://localhost:8000/api/products/",
+    "bills_products": "http://localhost:8000/api/bills_products/"
+}
+ ~~~
  
+ Para acceder desde Postman, Insomnia u otro programa, debemos proporcionarle el Token  
+ generado ubicado en la url http://localhost:8000/admin/authoken/tokenproxy copiarlo y  
+ en postman u otro programa vamos a Headers y en key elegimos `Authorization` y en value  
+ `Token 'pegamos el token copiado'`, asi tal cual con la palabra 'Token' al principio  
+ seguido del token copiado desde el administrador. Con este paso realizado ya se nos  
+ conceden los permisos para utilizar todos los endpoints desde el programa a utilizar.  
+   
+   ## Login/SigIn de Usuarios:  
+     
+   ~~~
+   {
+      "http://localhost:8000/login/",
+      "http://localhost:8000/register/"
+   }
+   ~~~
+  
+  Podemos registrar y iniciar sesión desde éstas url, con un formulario diferente para cada  
+  endpoint, asignandole los Tokens desde http://localhost:8000/admin/authoken/ a cada usuario.  
+  
+  ##  Descargar e Importar archivos CSV:
+  
+  ~~~
+  {
+      "http://localhost:8000/import",
+      "http://localhost:8000/export"
+  }
+  ~~~
+  Con `/import` nos abre un formulario donde podemos eligir el archivo a importar y con `/export`  
+  nos descarga automáticamente un archivo csv con los registros de clientes.
