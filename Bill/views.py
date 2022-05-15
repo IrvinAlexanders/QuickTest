@@ -14,6 +14,8 @@ class BillView(viewsets.ModelViewSet):
 
     permission_classes = [IsAuthenticated]
     serializer_class = BillModelSerializer
+    queryset = Bill.objects.all()
+    lookup_field = 'pk'
 
     def get(self, request, pk=None):
         if pk == None:

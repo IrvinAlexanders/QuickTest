@@ -7,8 +7,8 @@ class Bill(models.Model):
     id = models.AutoField(primary_key=True)
     client_id = models.ForeignKey(Client, on_delete=models.CASCADE)
     company_name = models.CharField(max_length=100, blank=False)
-    nit = models.IntegerField(unique=True)
-    code = models.CharField(max_length=100, blank=False)
+    nit = models.IntegerField(unique=False)
+    code = models.CharField(max_length=100, blank=False, unique=True)
 
     def __str__(self):
         return f"{self.id} - {self.company_name} {self.nit}"

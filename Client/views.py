@@ -2,9 +2,10 @@ from django.http import JsonResponse, HttpResponse
 import json
 from .models import Client
 from django.core.serializers import serialize
-import sqlite3
-import pandas as pd
-from django.views.decorators.csrf import csrf_exempt
+from Bill.models import Bill
+import csv, io
+from django.shortcuts import render
+from django.contrib import messages
 from django.conf import settings
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -18,7 +19,7 @@ class ClientView(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = ClientModelSerializer
     queryset = Client.objects.all()
-    lookup_field = 'id'
+    lookup_field = 'pk'
 
     def get(self, request, pk=None):
         if pk == None:
@@ -60,49 +61,53 @@ class ClientView(viewsets.ModelViewSet):
         data = {"message": message, name: client}
         return JsonResponse(data=data, safe=True, status=200)
 
-@csrf_exempt
-def exportFile(request):
+def export(request):
+    
+    response = HttpResponse(content_type='text/csv')
+    writer = csv.writer(response)
+    writer.writerow(['document','First Name', 'Last Name', 'Email', 'Bill Id', 'Company name'])
+    
+    data_client = Client.objects.all()
+    data_bills = Bill.objects.all()
+    print(data_client)
+    for cli in data_client:
+        for bil in data_bills:
+            if bil.client_id_id == cli.id:
+                id_bil = bil.id
+                company_name = bil.company_name
+                client = [cli.document,cli.first_name, cli.last_name, cli.email, id_bil , company_name]
+                writer.writerow(client)
 
-    if request.method == 'GET':
-        conn = sqlite3.connect(str(db_path))
-        query_clients = conn.execute("SELECT * from API_clients")
+    response['Content-Disposition'] = 'attachment; filename="clients.csv"'
 
-        data = []
-        for row in query_clients:
-            query_bills = conn.execute(
-                "select * from API_bills where client_id_id = ?", (row[0],))
-            query_bills = query_bills.fetchall()
-            data.append({
-                "document": row[1],
-                "full_name": f'{row[2]} {row[3]}',
-                "bills": len(query_bills),
-            })
-        csv_object = pd.DataFrame.from_dict(data)
-
-        file = csv_object.to_csv(index=None)
-        response = HttpResponse(file, content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=QuickTest.csv'
-        return response
+    return response
 
 
-@csrf_exempt
-def importFile(request):
 
-    if request.method == 'POST':
-        conn = sqlite3.connect(str(db_path))
-        cursor = conn.cursor()
-        registries = "INSERT INTO API_clients (document, first_name, last_name, email) VALUES(?, ?, ?, ?)"
-        csv_file = request.FILES["csv_file"]
-        file_data = csv_file.read().decode("utf-8")
-
-        file_data = [data.split(",") for data in file_data.split("\r\n")]
-        del file_data[0]
-        try:
-            data_to_import = [(row[0], row[1], row[2], row[3])
-                              for row in file_data]
-            cursor.executemany(registries, data_to_import)
-            conn.commit()
-        except:
-            return JsonResponse({"message": "error al importar archivo"}, status=400)
-        return JsonResponse({"data": file_data}, safe=True, status=200)
+def upload_csv(request):
+    template = "clients/upload.html"
+    prompt ={
+        'order' : 'Order of the CSV should be document, first_name, last_name, email'
+    }
+    
+    if request.method == "GET":
+        return render(request, template, prompt)
+    csv_file = request.FILES['file']
+    
+    if not csv_file.name.endswith('.csv'):
+        messages.error(request,'This is not a csv file')
+        
+    data_set = csv_file.read().decode('UTF-8')
+    io_string = io.StringIO(data_set)
+    next(io_string)
+    for column in csv.reader(io_string, delimiter=',', quotechar="|"):
+        _, created = Client.objects.update_or_create(
+            id = column[0],
+            document = column[1],
+            first_name = column[2],
+            last_name = column[3],
+            email = column[4]
+        )
+    context={}
+    return render(request, template, context)
 

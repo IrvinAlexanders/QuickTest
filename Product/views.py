@@ -12,6 +12,8 @@ class ProductView(viewsets.ModelViewSet):
 
     permission_classes = [IsAuthenticated]
     serializer_class = ProductModelSerializer
+    queryset = Product.objects.all()
+    lookup_field = 'pk'
 
     def get(self, request, pk=None):
         if pk == None:
